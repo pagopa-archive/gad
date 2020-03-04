@@ -1,5 +1,6 @@
 import * as express from "express";
 import { pki } from "node-forge";
+import { Logger } from "winston";
 
 const CLIENT_CERTIFICATE_HEADER_NAME = "x-arr-clientcert";
 
@@ -22,7 +23,8 @@ function isClientCertificateValid(
 
 export function requireClientCertificate(
   caCertificateBase64: string,
-  clientCertificateVerifiedHeader: string
+  clientCertificateVerifiedHeader: string,
+  logger: Logger
 ): express.Handler {
   return (
     req: express.Request,
@@ -38,6 +40,9 @@ export function requireClientCertificate(
       if (
         !isClientCertificateValid(caCertificateBase64, clientCertificateBase64)
       ) {
+        logger.debug(
+          `Invalid client certificate received|CERTIFICATE=${clientCertificateBase64}`
+        );
         res.status(403).send("Invalid client certificate");
       } else {
         // tslint:disable-next-line: no-object-mutation
@@ -45,6 +50,7 @@ export function requireClientCertificate(
         next();
       }
     } else {
+      logger.debug("No client certificate received");
       res.status(403).send("Client certificate required");
     }
   };

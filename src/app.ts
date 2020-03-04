@@ -23,7 +23,8 @@ const app = express();
 app.use(
   requireClientCertificate(
     CA_CERTIFICATE_BASE64,
-    CLIENT_CERTIFICATE_VERIFIED_HEADER
+    CLIENT_CERTIFICATE_VERIFIED_HEADER,
+    logger
   )
 );
 
