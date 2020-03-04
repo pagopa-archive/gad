@@ -11,7 +11,9 @@ function isClientCertificateValid(
   logger: Logger
 ): boolean {
   try {
+    logger.verbose("Creating ca certificate from pem");
     const caCertificate = pki.certificateFromPem(caCertificateBase64);
+    logger.verbose("Creating client certificate from pem");
     const clientCertificate = pki.certificateFromPem(
       `-----BEGIN CERTIFICATE-----${clientCertificateBase64}-----END CERTIFICATE-----`
     );
