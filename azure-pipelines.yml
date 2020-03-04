@@ -1,0 +1,54 @@
+# Node.js
+# Build a general Node.js project with npm.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+trigger:
+  - master
+
+pool:
+  vmImage: "windows-2019"
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: "10.x"
+    displayName: "Install Node.js"
+
+  - script: |
+      yarn install
+      yarn build
+    displayName: "Install"
+
+  - script: |
+      yarn build
+    displayName: "Build"
+
+  - task: CopyFiles@2
+    inputs:
+      SourceFolder: "$(System.DefaultWorkingDirectory)"
+      Contents: |
+        node_modules/**/*
+        dist/**/*
+        public/**/*
+        web.config
+      TargetFolder: "$(System.DefaultWorkingDirectory)/deploy"
+      CleanTargetFolder: true
+      OverWrite: true
+
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: "$(System.DefaultWorkingDirectory)/deploy"
+      includeRootFolder: false
+      archiveType: "zip"
+      archiveFile: "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip"
+      replaceExistingArchive: true
+
+  - task: AzureRmWebAppDeployment@4
+    inputs:
+      ConnectionType: 'AzureRM'
+      azureSubscription: 'PROD-IO(ec285037-c673-4f58-b594-d7c480da4e8b)'
+      appType: 'webApp'
+      WebAppName: 'io-s-app-apigad'
+      packageForLinux: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+
