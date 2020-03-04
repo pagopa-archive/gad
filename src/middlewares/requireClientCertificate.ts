@@ -19,7 +19,7 @@ function isClientCertificateValid(
     return caCertificate.verify(clientCertificate);
   } catch (e) {
     logger.debug(
-      `Error verifying client certificate|CA_CERTIFICATE_BASE64=${caCertificateBase64}|CLIENT_CERTIFICATE_BASE64=${clientCertificateBase64}`
+      `Error verifying client certificate|CA_CERTIFICATE_BASE64=${caCertificateBase64}|CLIENT_CERTIFICATE_BASE64=${clientCertificateBase64}|ERROR=${e.message}`
     );
     return false;
   }
