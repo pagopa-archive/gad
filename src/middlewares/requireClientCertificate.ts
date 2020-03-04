@@ -7,7 +7,8 @@ const CLIENT_CERTIFICATE_HEADER_NAME = "x-arr-clientcert";
 // TODO: Add memoization
 function isClientCertificateValid(
   caCertificateBase64: string,
-  clientCertificateBase64: string
+  clientCertificateBase64: string,
+  logger: Logger
 ): boolean {
   try {
     const caCertificate = pki.certificateFromPem(caCertificateBase64);
@@ -17,6 +18,9 @@ function isClientCertificateValid(
 
     return caCertificate.verify(clientCertificate);
   } catch (e) {
+    logger.debug(
+      `Error verifying client certificate|CA_CERTIFICATE_BASE64=${caCertificateBase64}|CLIENT_CERTIFICATE_BASE64=${clientCertificateBase64}`
+    );
     return false;
   }
 }
@@ -38,10 +42,14 @@ export function requireClientCertificate(
       clientCertificateBase64 !== ""
     ) {
       if (
-        !isClientCertificateValid(caCertificateBase64, clientCertificateBase64)
+        !isClientCertificateValid(
+          caCertificateBase64,
+          clientCertificateBase64,
+          logger
+        )
       ) {
         logger.debug(
-          `Invalid client certificate received|CERTIFICATE=${clientCertificateBase64}`
+          `Invalid client certificate received|CLIENT_CERTIFICATE_BASE64=${clientCertificateBase64}`
         );
         res.status(403).send("Invalid client certificate");
       } else {
