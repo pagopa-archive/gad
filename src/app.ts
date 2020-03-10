@@ -1,5 +1,5 @@
-import * as dotenv from "dotenv";
-import * as express from "express";
+import dotenv from "dotenv";
+import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
 
 import { makeGetRequiredENVVar } from "./envs";
@@ -17,6 +17,18 @@ const CLIENT_CERTIFICATE_VERIFIED_HEADER = getRequiredENVVar(
 const PROXY_TARGET = getRequiredENVVar("GAD_PROXY_TARGET");
 const PROXY_CHANGE_ORIGIN =
   getRequiredENVVar("GAD_PROXY_CHANGE_ORIGIN") === "true";
+
+function roundrobin(ips: ReadonlyArray<string>): () => string {
+  // tslint:disable-next-line: no-let
+  let index = 0;
+
+  return () => {
+    if (index >= ips.length) {
+      index = 0;
+    }
+    return ips[index++];
+  };
+}
 
 const app = express();
 

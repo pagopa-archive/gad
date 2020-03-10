@@ -1,4 +1,4 @@
-import * as logform from "logform";
+import logform from "logform";
 import { createLogger, format, transports } from "winston";
 
 const { timestamp, printf } = logform.format;

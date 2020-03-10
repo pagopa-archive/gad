@@ -1,24 +1,34 @@
-import * as express from "express";
+import express from "express";
+import memoize from "fast-memoize";
 import { pki } from "node-forge";
 import { Logger } from "winston";
 
 const CLIENT_CERTIFICATE_HEADER_NAME = "x-arr-clientcert";
 
-// TODO: Add memoization
+export function verifyClientCertificate(
+  caCertificateBase64: string,
+  clientCertificateBase64: string
+): boolean {
+  const caCertificate = pki.certificateFromPem(caCertificateBase64);
+  const clientCertificate = pki.certificateFromPem(
+    `-----BEGIN CERTIFICATE-----${clientCertificateBase64}-----END CERTIFICATE-----`
+  );
+
+  return caCertificate.verify(clientCertificate);
+}
+
+export const verifyClientCertificateMemoized = memoize(verifyClientCertificate);
+
 function isClientCertificateValid(
   caCertificateBase64: string,
   clientCertificateBase64: string,
   logger: Logger
 ): boolean {
   try {
-    logger.verbose("Creating ca certificate from pem");
-    const caCertificate = pki.certificateFromPem(caCertificateBase64);
-    logger.verbose("Creating client certificate from pem");
-    const clientCertificate = pki.certificateFromPem(
-      `-----BEGIN CERTIFICATE-----${clientCertificateBase64}-----END CERTIFICATE-----`
+    return verifyClientCertificateMemoized(
+      caCertificateBase64,
+      clientCertificateBase64
     );
-
-    return caCertificate.verify(clientCertificate);
   } catch (e) {
     logger.debug(
       `Error verifying client certificate|CA_CERTIFICATE_BASE64=${caCertificateBase64}|CLIENT_CERTIFICATE_BASE64=${clientCertificateBase64}|ERROR=${e.message}`
