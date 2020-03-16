@@ -60,6 +60,7 @@ app.use(
       };
 
       if (contentType === "application/json") {
+        logger.debug("Rewriting request body");
         writeBody(JSON.stringify(req.body));
       }
 
