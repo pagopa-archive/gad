@@ -1,3 +1,4 @@
+import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import express, { Request, Response } from "express";
 import { ClientRequest } from "http";
@@ -33,6 +34,10 @@ function roundrobin(ips: ReadonlyArray<string>): () => string {
 }
 
 const app = express();
+
+// Configuring body parser middleware
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 app.use(
   requireClientCertificate(
