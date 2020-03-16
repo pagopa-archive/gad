@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
-import express from "express";
+import express, { Request, Response } from "express";
+import { ClientRequest } from "http";
 import { createProxyMiddleware } from "http-proxy-middleware";
+import querystring from "querystring";
 
 import { makeGetRequiredENVVar } from "./envs";
 import { logger } from "./logs";
@@ -45,7 +47,26 @@ app.use(
     // tslint:disable: object-literal-sort-keys
     target: PROXY_TARGET,
     changeOrigin: PROXY_CHANGE_ORIGIN,
-    logProvider: () => logger
+    logProvider: () => logger,
+    onProxyReq: (proxyReq: ClientRequest, req: Request, res: Response) => {
+      if (!req.body || !Object.keys(req.body).length) {
+        return;
+      }
+
+      const contentType = proxyReq.getHeader("Content-Type");
+      const writeBody = (bodyData: string) => {
+        proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
+        proxyReq.write(bodyData);
+      };
+
+      if (contentType === "application/json") {
+        writeBody(JSON.stringify(req.body));
+      }
+
+      if (contentType === "application/x-www-form-urlencoded") {
+        writeBody(querystring.stringify(req.body));
+      }
+    }
     // tslint:enable: object-literal-sort-keys
   })
 );
