@@ -1,3 +1,4 @@
+import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
@@ -31,6 +32,10 @@ function roundrobin(ips: ReadonlyArray<string>): () => string {
 }
 
 const app = express();
+
+// Configuring body parser middleware
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 app.use(
   requireClientCertificate(
