@@ -31,6 +31,10 @@ function roundrobin(ips: ReadonlyArray<string>): () => string {
 }
 
 // Start Application Insight
+// tslint:disable-next-line: no-object-mutation
+appInsights.defaultClient.context.tags[
+  appInsights.defaultClient.context.keys.cloudRole
+] = "apigad";
 appInsights.setup();
 appInsights.start();
 
