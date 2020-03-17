@@ -1,10 +1,6 @@
-import bodyParser from "body-parser";
 import dotenv from "dotenv";
-import express, { Request, Response } from "express";
-import { ClientRequest } from "http";
+import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
-import querystring from "querystring";
-
 import { makeGetRequiredENVVar } from "./envs";
 import { logger } from "./logs";
 import { requireClientCertificate } from "./middlewares/requireClientCertificate";
@@ -35,10 +31,6 @@ function roundrobin(ips: ReadonlyArray<string>): () => string {
 
 const app = express();
 
-// Configuring body parser middleware
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-
 app.use(
   requireClientCertificate(
     CA_CERTIFICATE_BASE64,
@@ -52,30 +44,7 @@ app.use(
     // tslint:disable: object-literal-sort-keys
     target: PROXY_TARGET,
     changeOrigin: PROXY_CHANGE_ORIGIN,
-    logProvider: () => logger,
-    onProxyReq: (proxyReq: ClientRequest, req: Request, res: Response) => {
-      if (!req.body || !Object.keys(req.body).length) {
-        return;
-      }
-
-      const contentType = proxyReq.getHeader("Content-Type");
-      const writeBody = (bodyData: string) => {
-        proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
-        proxyReq.write(bodyData);
-      };
-
-      if (contentType === "application/json") {
-        logger.debug("Rewriting request body");
-        writeBody(JSON.stringify(req.body));
-      }
-
-      if (contentType === "application/x-www-form-urlencoded") {
-        writeBody(querystring.stringify(req.body));
-      }
-
-      // tslint:disable-next-line: no-object-mutation no-delete
-      delete req.body;
-    }
+    logProvider: () => logger
     // tslint:enable: object-literal-sort-keys
   })
 );
