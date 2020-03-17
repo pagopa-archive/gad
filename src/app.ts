@@ -1,4 +1,4 @@
-import appInsights from "applicationinsights";
+import * as appInsights from "applicationinsights";
 import dotenv from "dotenv";
 import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
