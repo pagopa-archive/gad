@@ -1,3 +1,4 @@
+import appInsights from "applicationinsights";
 import dotenv from "dotenv";
 import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
@@ -28,6 +29,10 @@ function roundrobin(ips: ReadonlyArray<string>): () => string {
     return ips[index++];
   };
 }
+
+// Start Application Insight
+appInsights.setup();
+appInsights.start();
 
 const app = express();
 
