@@ -72,6 +72,9 @@ app.use(
       if (contentType === "application/x-www-form-urlencoded") {
         writeBody(querystring.stringify(req.body));
       }
+
+      // tslint:disable-next-line: no-object-mutation no-delete
+      delete req.body;
     }
     // tslint:enable: object-literal-sort-keys
   })
