@@ -40,6 +40,12 @@ appInsights.start();
 
 const app = express();
 
+app.get("/ping", (req, res) => {
+  res.json({
+    active: true
+  });
+});
+
 app.use(
   requireClientCertificate(
     CA_CERTIFICATE_BASE64,
