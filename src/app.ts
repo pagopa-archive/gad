@@ -1,6 +1,6 @@
 import * as appInsights from "applicationinsights";
 import dotenv from "dotenv";
-import express from "express";
+import express, { Handler } from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import { makeGetRequiredENVVar } from "./envs";
 import { logger } from "./logs";
@@ -30,6 +30,16 @@ function roundrobin(ips: ReadonlyArray<string>): () => string {
   };
 }
 
+function unless(path: string, middleware: Handler): Handler {
+  return (req, res, next) => {
+    if (path === req.path) {
+      return next();
+    } else {
+      return middleware(req, res, next);
+    }
+  };
+}
+
 // Start Application Insight
 // tslint:disable-next-line: no-object-mutation
 appInsights.setup();
@@ -40,28 +50,34 @@ appInsights.start();
 
 const app = express();
 
-app.get("/ping", (req, res) => {
-  res.json({
-    active: true
-  });
-});
-
 app.use(
-  requireClientCertificate(
-    CA_CERTIFICATE_BASE64,
-    CLIENT_CERTIFICATE_VERIFIED_HEADER,
-    logger
+  unless(
+    "/ping",
+    requireClientCertificate(
+      CA_CERTIFICATE_BASE64,
+      CLIENT_CERTIFICATE_VERIFIED_HEADER,
+      logger
+    )
   )
 );
 
 app.use(
-  createProxyMiddleware({
-    // tslint:disable: object-literal-sort-keys
-    target: PROXY_TARGET,
-    changeOrigin: PROXY_CHANGE_ORIGIN,
-    logProvider: () => logger
-    // tslint:enable: object-literal-sort-keys
-  })
+  unless(
+    "/ping",
+    createProxyMiddleware({
+      // tslint:disable: object-literal-sort-keys
+      target: PROXY_TARGET,
+      changeOrigin: PROXY_CHANGE_ORIGIN,
+      logProvider: () => logger
+      // tslint:enable: object-literal-sort-keys
+    })
+  )
 );
+
+app.get("/ping", (_, res) => {
+  res.json({
+    active: true
+  });
+});
 
 app.listen(process.env.PORT || 80);
