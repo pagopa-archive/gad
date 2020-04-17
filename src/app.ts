@@ -30,9 +30,9 @@ function roundrobin(ips: ReadonlyArray<string>): () => string {
   };
 }
 
-function unless(path: string, middleware: Handler): Handler {
+function unless(paths: ReadonlyArray<string>, middleware: Handler): Handler {
   return (req, res, next) => {
-    if (path === req.path) {
+    if (paths.includes(req.path)) {
       return next();
     } else {
       return middleware(req, res, next);
@@ -50,9 +50,11 @@ appInsights.start();
 
 const app = express();
 
+const excludedPaths: ReadonlyArray<string> = ["/", "/ping"];
+
 app.use(
   unless(
-    "/ping",
+    excludedPaths,
     requireClientCertificate(
       CA_CERTIFICATE_BASE64,
       CLIENT_CERTIFICATE_VERIFIED_HEADER,
@@ -63,7 +65,7 @@ app.use(
 
 app.use(
   unless(
-    "/ping",
+    excludedPaths,
     createProxyMiddleware({
       // tslint:disable: object-literal-sort-keys
       target: PROXY_TARGET,
@@ -73,6 +75,10 @@ app.use(
     })
   )
 );
+
+app.get("/", (_, res) => {
+  res.status(200).send();
+});
 
 app.get("/ping", (_, res) => {
   res.json({
