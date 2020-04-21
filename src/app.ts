@@ -3,10 +3,12 @@ import dotenv from "dotenv";
 import express, { Handler } from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import { makeGetRequiredENVVar } from "./envs";
-import { logger } from "./logs";
+import { getLogger } from "./logs";
 import { requireClientCertificate } from "./middlewares/requireClientCertificate";
 
 dotenv.config();
+
+const logger = getLogger(process.env.LOG_LEVEL || "info");
 
 const getRequiredENVVar = makeGetRequiredENVVar(logger);
 
@@ -70,7 +72,7 @@ app.use(
       // tslint:disable: object-literal-sort-keys
       target: PROXY_TARGET,
       changeOrigin: PROXY_CHANGE_ORIGIN,
-      logProvider: () => logger
+      logProvider: () => logger,
       // tslint:enable: object-literal-sort-keys
     })
   )
@@ -82,7 +84,7 @@ app.get("/", (_, res) => {
 
 app.get("/ping", (_, res) => {
   res.json({
-    active: true
+    active: true,
   });
 });
 

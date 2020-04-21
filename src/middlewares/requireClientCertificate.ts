@@ -30,7 +30,7 @@ function isClientCertificateValid(
       clientCertificateBase64
     );
   } catch (e) {
-    logger.debug(
+    logger.info(
       `Error verifying client certificate|CA_CERTIFICATE_BASE64=${caCertificateBase64}|CLIENT_CERTIFICATE_BASE64=${clientCertificateBase64}|ERROR=${e.message}`
     );
     return false;
@@ -49,6 +49,8 @@ export function requireClientCertificate(
   ) => {
     const clientCertificateBase64 = req.get(CLIENT_CERTIFICATE_HEADER_NAME);
 
+    logger.debug(`Client certificate received: ${clientCertificateBase64}`);
+
     if (
       clientCertificateBase64 !== undefined &&
       clientCertificateBase64 !== ""
@@ -60,7 +62,7 @@ export function requireClientCertificate(
           logger
         )
       ) {
-        logger.debug(
+        logger.info(
           `Invalid client certificate received|CLIENT_CERTIFICATE_BASE64=${clientCertificateBase64}`
         );
         res.status(403).send("Invalid client certificate");
@@ -70,7 +72,7 @@ export function requireClientCertificate(
         next();
       }
     } else {
-      logger.debug("No client certificate received");
+      logger.info("No client certificate received");
       res.status(403).send("Client certificate required");
     }
   };
