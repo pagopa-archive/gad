@@ -1,4 +1,4 @@
-const Agent = require('agentkeepalive');
+const Agent = require("agentkeepalive");
 import * as appInsights from "applicationinsights";
 import dotenv from "dotenv";
 import express, { Handler } from "express";
@@ -13,6 +13,8 @@ const logger = getLogger(process.env.LOG_LEVEL || "info");
 
 const getRequiredENVVar = makeGetRequiredENVVar(logger);
 
+const DISABLE_CLIENT_CERTIFICATE_VERIFICATION =
+  process.env.DISABLE_CLIENT_CERTIFICATE_VERIFICATION === "true";
 const CA_CERTIFICATE_BASE64 = getRequiredENVVar("GAD_CA_CERTIFICATE_BASE64");
 const CLIENT_CERTIFICATE_VERIFIED_HEADER = getRequiredENVVar(
   "GAD_CLIENT_CERTIFICATE_VERIFIED_HEADER"
@@ -50,7 +52,7 @@ const keepAliveHttpAgent = new Agent({
   maxFreeSockets: 10,
   timeout: 60000,
   freeSocketTimeout: 30000,
-  socketActiveTTL: 110000
+  socketActiveTTL: 110000,
 });
 
 // Start Application Insight
@@ -65,16 +67,18 @@ const app = express();
 
 const excludedPaths: ReadonlyArray<string> = ["/", "/ping"];
 
-app.use(
-  unless(
-    excludedPaths,
-    requireClientCertificate(
-      CA_CERTIFICATE_BASE64,
-      CLIENT_CERTIFICATE_VERIFIED_HEADER,
-      logger
+if (!DISABLE_CLIENT_CERTIFICATE_VERIFICATION) {
+  app.use(
+    unless(
+      excludedPaths,
+      requireClientCertificate(
+        CA_CERTIFICATE_BASE64,
+        CLIENT_CERTIFICATE_VERIFIED_HEADER,
+        logger
+      )
     )
-  )
-);
+  );
+}
 
 app.use(
   unless(
