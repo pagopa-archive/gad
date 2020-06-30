@@ -1,3 +1,4 @@
+const Agent = require('agentkeepalive');
 import * as appInsights from "applicationinsights";
 import dotenv from "dotenv";
 import express, { Handler } from "express";
@@ -42,6 +43,16 @@ function unless(paths: ReadonlyArray<string>, middleware: Handler): Handler {
   };
 }
 
+// Agent
+const keepAliveHttpAgent = new Agent({
+  keepAlive: true,
+  maxSockets: 40,
+  maxFreeSockets: 10,
+  timeout: 60000,
+  freeSocketTimeout: 30000,
+  socketActiveTTL: 110000
+});
+
 // Start Application Insight
 // tslint:disable-next-line: no-object-mutation
 appInsights.setup();
@@ -72,6 +83,7 @@ app.use(
       // tslint:disable: object-literal-sort-keys
       target: PROXY_TARGET,
       changeOrigin: PROXY_CHANGE_ORIGIN,
+      agent: keepAliveHttpAgent,
       logProvider: () => logger,
       // tslint:enable: object-literal-sort-keys
     })
